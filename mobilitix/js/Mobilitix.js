@@ -32,12 +32,23 @@ Ext.regModel('Account', {
 		    data: []
 		});
 		
-		var calculateDesiredWidth = function() {
-		    var viewWidth = Ext.Element.getViewportWidth(),
-		        desiredWidth = Math.min(viewWidth, 400) - 10;
+		var getDesiredW = function(offset) {
+		    var viewW = Ext.Element.getViewportWidth(),
+		        desiredW = Math.min(viewW-offset, 400);
 		
-		    return desiredWidth;
+		    return desiredW;
 		};
+		
+		
+		var getDesiredH = function(offset){
+			var viewH = Ext.Element.getViewportHeight(),
+		        desiredH = Math.min(viewH-offset, 400);
+			console.log(Ext.Element.getViewportHeight() + ' - ' + desiredH);
+		    return desiredH;
+			
+		}
+	
+		
 		
 		var welcome = new Ext.Component({
 			title: 'Mobilitix',
@@ -45,11 +56,9 @@ Ext.regModel('Account', {
 			iconCls: 'settings',
 			id: 'welcomeTab',
             scroll: 'vertical',
-            html: ['<h1 id="title">Mobilitix</h1>',
-					'<h2>Mobile Web Analytics</h2>',
-      				'<button id="accountButton">Login</button>',
-					'<div id="loading" style="visibility:hidden;">Loading your settings</div>',
-    				'<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/>']
+            html: ['<div style="height:35px"><h1 id="title">Mobile Web Analytics</h1>',
+    			   '<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/></div>']
+					
 		});
 		 
 
@@ -67,7 +76,14 @@ Ext.regModel('Account', {
 		        dock: 'top',
 		        xtype: 'toolbar',
 		        title: 'Mobilitix'
-		    }],
+		    },{
+				dock: 'bottom',
+				xtype: 'button',				
+				text: 'Login',
+				ui:'round',
+				id:'accountButton',
+				handler:checkAuth
+			}],
 			items: [{
 		        xtype: 'fieldset',
 		        items: [welcome]
@@ -122,6 +138,19 @@ Ext.regModel('Account', {
 		});
 		
 
+
+		var appLoader = new Ext.Panel({
+                    floating: true,
+                    modal: true,
+                    centered: true,
+                    width: 300,
+					height:70,
+                    styleHtmlContent: true,
+					hideOnMaskTap: false,
+                    html: '<img src="/img/ajax-loader.gif" alt="loading"/>',
+                    
+                  
+         });
 		
 		// app initing
 		var tabpanel = new Ext.TabPanel({
@@ -150,6 +179,8 @@ Ext.regModel('Account', {
 		
 		//auth
 		var checkAuth = function() {
+			console.log("checkauth");
+			
 			// auth
 			if(!auth)
 				google.accounts.user.login(scope);				
@@ -162,7 +193,8 @@ Ext.regModel('Account', {
 		// app Init
 		var appInit = function(){
 			Ext.get("accountButton").hide();
-			Ext.get("loading").show();
+			
+			showLoader();
 			var analyticsService = new google.gdata.analytics.AnalyticsService('Mobilitix-Webapp');	
    			var accountFeedUri = 'https://www.google.com/analytics/feeds/accounts/default?max-results=50'; 
 	
@@ -188,17 +220,17 @@ Ext.regModel('Account', {
 				title:'Account List',
 				cls: 'accontCnt',
 				iconCls: 'accont',
-				id: 'accoutTab',
+				id: 'accountTab',
 				scroll: 'vertical',
-			    layout: Ext.is.Phone ? 'fit' : {
+			    layout:{
 			        type: 'vbox',
-			        align: 'left',
+			        align: 'left',	
 			        pack: 'center'
 			    },
 			    cls: 'account-list',
 			    items: [{
-			        width: Ext.is.Phone ? undefined : 300,
-			        height: 500,
+			        width: Ext.is.Phone ? getDesiredW(0) : 300,
+			        height: getDesiredH(52),
 			        xtype: 'list',
 			        disclosure: {
 			            scope: Mobilitix.AccountStore,
@@ -218,7 +250,10 @@ Ext.regModel('Account', {
 			});
 		
 			accountList.update();
+			
 			Ext.get('welcomeTab').hide();
+			hideLoader();
+			
 			home.add(accountList);
 			home.doLayout();
 			
@@ -238,6 +273,19 @@ Ext.regModel('Account', {
 			if(Mobilitix.selectedAccount !== null && Mobilitix.reportsEnabled!==true){
 				enableReports();
 			}			
+		}
+		
+		
+		var hideLoader = function(){					
+			appLoader.hide();					
+		}
+		
+		var showLoader = function(){    
+            if (!appLoader) {
+				appLoader = new appLoader();
+                
+            }
+            appLoader.show('pop');			
 		}
 		
 		// query handler
@@ -279,7 +327,8 @@ Ext.regModel('Account', {
 		}
 		
 		
-		// Event Managers
+		// Event Managers	
 		Ext.EventManager.on("accountButton", 'click', checkAuth);
+		
     }
 });
