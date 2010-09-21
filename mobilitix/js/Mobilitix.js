@@ -16,6 +16,9 @@ Ext.regModel('Account', {
     onReady: function() {
 		
 		var scope = "https://www.google.com/analytics/feeds";
+		var analyticsService = new google.gdata.analytics.AnalyticsService('Mobilitix-Webapp');	
+   		var accountFeedUri = 'https://www.google.com/analytics/feeds/accounts/default?max-results=50';
+		 
 		var auth = google.accounts.user.checkLogin(scope);
 		
 		Mobilitix.selectedAccount = null;
@@ -48,23 +51,7 @@ Ext.regModel('Account', {
 			
 		}
 	
-		
-		
-		var welcome = new Ext.Component({
-			title: 'Mobilitix',
-            cls: 'welcomeCnt',
-			iconCls: 'settings',
-			id: 'welcomeTab',
-            scroll: 'vertical',
-            html: ['<div style="height:35px"><h1 id="title">Mobile Web Analytics</h1>',
-    			   '<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/></div>']
-					
-		});
-		 
 
-
-
-		
         var home = new Ext.Panel({
             title: 'Settings',
             cls: 'settingsCnt',
@@ -90,68 +77,8 @@ Ext.regModel('Account', {
 		    }]
            
         });
-		
-		
-		var traffic = new Ext.Component({
-			title: 'Traffic',
-            cls: 'trafficCnt',
-			iconCls: 'traffic',
-			id: 'trafficTab',
-            scroll: 'vertical',
-            html: ['<h1>Traffic Summary</h1>']
-		});
-		
-		var visitors = new Ext.Component({
-			title: 'Visitors',
-            cls: 'visitorsCnt',
-			iconCls: 'visitors',
-			id: 'visitorsTab',
-            scroll: 'vertical',
-            html: ['<h1>Visitors Summary</h1>']
-		});
-		
-		var goals = new Ext.Component({
-			title: 'Goals',
-			cls: 'goalsCnt',
-			iconCls: 'goals',
-			id: 'goalsTab',
-            scroll: 'vertical',
-            html: ['<h1>Goals Summary</h1>']
-		});
-		
-		var campaigns = new Ext.Component({
-			title: 'Campaigns',
-            cls: 'campaignsCnt',
-			iconCls: 'campaigns',
-			id: 'campaignsTab',
-            scroll: 'vertical',
-            html: ['<h1>Campaigns Summary</h1>']
-		});
-		
-		var seo = new Ext.Component({
-			title: 'SEO',
-			cls: 'seoCnt',
-			iconCls: 'seo',
-			id: 'seoTab',
-            scroll: 'vertical',
-            html: ['<h1>SEO Summary</h1>']
-		});
-		
 
 
-		var appLoader = new Ext.Panel({
-                    floating: true,
-                    modal: true,
-                    centered: true,
-                    width: 300,
-					height:70,
-                    styleHtmlContent: true,
-					hideOnMaskTap: false,
-                    html: '<img src="/img/ajax-loader.gif" alt="loading"/>',
-                    
-                  
-         });
-		
 		// app initing
 		var tabpanel = new Ext.TabPanel({
 	            tabBar: {
@@ -195,8 +122,7 @@ Ext.regModel('Account', {
 			Ext.get("accountButton").hide();
 			
 			showLoader();
-			var analyticsService = new google.gdata.analytics.AnalyticsService('Mobilitix-Webapp');	
-   			var accountFeedUri = 'https://www.google.com/analytics/feeds/accounts/default?max-results=50'; 
+			
 	
 			analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
 		}
@@ -265,6 +191,12 @@ Ext.regModel('Account', {
 			
 			tabpanel.add(traffic,visitors,goals,campaigns)
 			tabpanel.doLayout();
+			
+			traffic.on("activate", doTraffic);
+			visitors.on("activate", doVisitors);
+			goals.on("activate", doGoals);
+			campaigns.on("activate", doCampaigns);
+			
 		}
 		
 		
@@ -288,30 +220,79 @@ Ext.regModel('Account', {
             appLoader.show('pop');			
 		}
 		
+		
 		// query handler
 		var dataManager = function(){
 			var dataQuery = 'https://www.google.com/analytics/feeds/data' +
 			
 			    '?start-date=' + Mobilitix.startDate +
 			    '&end-date=' + Mobilitix.endDate +
-			    '&dimensions=ga:pageTitle,ga:pagePath' +
-			    '&metrics=ga:pageviews' +
-			    '&sort=-ga:pageviews' +
+			    '&dimensions=ga:medium' +
+			    '&metrics=ga:visits' +
+			    '&sort=-ga:visits' +
 			    '&max-results=10' +
 			    '&ids=' + Mobilitix.selectedAccount;
 			  
-			 analyticsService.getDataFeed(dataQuery, handleDataFeed, handleError);					
+			 analyticsService.getDataFeed(dataQuery, handleDataFeed, errorHandler);					
 		}
 		
+		
+		var handleDataFeed = function(result){
+			
+			
+			var entries = result.feed.getEntries();
+			var data = new google.visualization.DataTable();
+			
+			data.addColumn('string', 'Traffic Source');
+		    data.addColumn('number', 'Visitors');
+			
+			for (var i = 0, entry; entry = entries[i]; ++i) {
+				data.addRow([entry.getValueOf('ga:medium'), entry.getValueOf('ga:visits')]); 
+			}
+			
+			var chart = new google.visualization.PieChart(document.getElementById('trafficTab'));
+    		chart.draw(data, {width: 400, height: 240, is3D: true, title: 'Visitors by traffic source'});
+		      
+		     
+			
+		}
 		
 		var dataFeedHandler = function(result){
 			console.log("get the data!" + result)
 			
 		}
 		
+		
+		
+		/* reporting */
 		 
+		var doTraffic = function(){
+			
+			console.log("let's do some traffic reporting!")
+			dataManager();
+			
+			
+		}
 		
 		
+		var doVisitors = function(){
+			console.log("let's do some visitors reporting!")
+			dataManager();
+		}
+		
+		
+		var doGoals = function(){
+			console.log("let's do some goals reporting!")
+			dataManager();
+		}
+		
+		var doCampaigns = function(){
+			console.log("let's do some campaigns reporting!")
+			
+		}
+		
+		
+				
 		// feed logic
 		
 		
