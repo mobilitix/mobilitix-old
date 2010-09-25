@@ -5,7 +5,9 @@ var welcome = new Ext.Component({
 	id: 'welcomeTab',
     scroll: 'vertical',
     html: ['<div style="height:35px"><h1 id="title">Mobile Web Analytics</h1>',
-		   '<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/></div>']				
+			'<img src="/img/bee.png" alt="Mobile Web Analytics"/><br/>',
+		   '<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/>',
+		   '<p>Tap to <strong>login with your Google Analytics</strong> account. You will login on Google Servers: we will never store nor see your password.</p></div>']				
 });
 		 
 var traffic = new Ext.Component({
@@ -67,7 +69,7 @@ var appLoader = new Ext.Panel({
 			height:70,
             styleHtmlContent: true,
 			hideOnMaskTap: false,
-            html: '<img src="/img/ajax-loader.gif" alt="loading"/>',
+            html: '<div><img src="/img/ajax-loader.gif" alt="loading" style="float:left;padding:0 10px"/> Loading your data</div>',
             
           
  });

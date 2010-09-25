@@ -21,10 +21,30 @@ Ext.regModel('Account', {
 		 
 		var auth = google.accounts.user.checkLogin(scope);
 		
-		Mobilitix.selectedAccount = null;
+		Mobilitix.reportConfig = {
+			selectedAccount: null,
+			reportsEnabled: false,
+			startDate: '2010-09-01',
+			endDate: '2010-09-08',
+			metrics: 'ga:visits',
+			dimension:'ga:date',
+			sort: 'ga:date',
+			results: '10',
+			chartTarget: 'trafficDataHolder'
+		}
+	
+		
+		/*
+Mobilitix.selectedAccount = null;
 		Mobilitix.reportsEnabled = false;
 		Mobilitix.startDate = '2010-09-01';
 		Mobilitix.endDate = '2010-09-08';
+		Mobilitix.metrics = "ga:visits";
+		Mobilitix.dimension = "ga:date";
+		Mobilitix.sort = "ga:date"; 
+		Mobilitix.results = "10";
+		Mobilitix.chartTarget = "trafficDataHolder"; 
+*/
 		
 		Mobilitix.AccountStore = new Ext.data.Store({
 		    model: 'Account',
@@ -52,6 +72,21 @@ Ext.regModel('Account', {
 		}
 	
 
+		var dockedItems = [{
+				dock: 'top',
+				xtype: 'toolbar',
+				title: 'Mobilitix',
+				pack: 'justify', 
+				items: [{
+					xtype: 'button',
+					text: 'Login',
+					ui: 'round',
+					id: 'accountButton',
+					handler: checkAuth
+				}]
+			}];
+			
+
         var home = new Ext.Panel({
             title: 'Settings',
             cls: 'settingsCnt',
@@ -59,54 +94,25 @@ Ext.regModel('Account', {
 			id: 'settingsTab',
             scroll: 'vertical',
 			align: 'center',
-			dockedItems: [{
-		        dock: 'top',
-		        xtype: 'toolbar',
-		        title: 'Mobilitix'
-		    },{
-				dock: 'bottom',
-				xtype: 'button',				
-				text: 'Login',
-				ui:'round',
-				id:'accountButton',
-				handler:checkAuth
-			}],
-			items: [{
-		        xtype: 'fieldset',
-		        items: [welcome]
-		    }]
-           
+			fullscreen:true,
+			layout:{
+			        type: 'vbox',
+			        align: 'left',	
+			        pack: 'center'
+			},
+			dockedItems: dockedItems,
+			items:[welcome]				
+			   
         });
 
 
-		// app initing
-		var tabpanel = new Ext.TabPanel({
-	            tabBar: {
-	                dock: 'bottom',
-	                layout: {
-	                    pack: 'center'
-	                }
-	            },
-	            fullscreen: true,
-	            ui: 'light',
-	            animation: {
-	                type: 'cardslide',
-	                cover: true
-	            },
-	            
-	            defaults: {
-	                scroll: 'vertical'
-	            },
-	            items: [home]
-	        });	
 
-		
 		/* helpers */
 		
 		
 		//auth
 		var checkAuth = function() {
-			Ext.get("accountButton").remove();
+			//Ext.get("accountButton").remove();
 			
 			// auth
 			if(!auth)
@@ -119,7 +125,7 @@ Ext.regModel('Account', {
 		// app Init
 		var appInit = function(){
 			
-
+				
 			showLoader();
 			analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
 		}
@@ -129,6 +135,8 @@ Ext.regModel('Account', {
 		
 		// analytics api data handlers
 		var accountFeedHandler = function(result){
+			home.remove(welcome);
+			
 			var entries = result.feed.getEntries();
 			console.log("accountHandler");
 			
@@ -152,8 +160,8 @@ Ext.regModel('Account', {
 			    },
 			    cls: 'account-list',
 			    items: [{
-			        width: Ext.is.Phone ? getDesiredW(0) : 300,
-			        height: getDesiredH(52),
+			        width: getDesiredW(0),
+			        height: getDesiredH(0),
 			        xtype: 'list',
 					listeners: {
 				        itemtap: setAccount,
@@ -168,7 +176,7 @@ Ext.regModel('Account', {
 			});
 		
 			accountList.update();		
-			Ext.get('welcomeTab').hide();	
+			//Ext.get('welcomeTab').hide();	
 			hideLoader();
 
 			
@@ -179,22 +187,43 @@ Ext.regModel('Account', {
 		
 		
 		var enableReports = function(){
-			console.log('enable reports');
+			home.remove(accountList);
 			
-			tabpanel.add(traffic,visitors,goals,campaigns)
-			tabpanel.doLayout();
 			
+			var tabpanel = new Ext.TabPanel({
+	            tabBar: {
+	                dock: 'bottom',
+	                layout: {
+	                    pack: 'center'
+	                }
+	            },
+	            fullscreen: true,
+	            ui: 'light',
+	            animation: {
+	                type: 'cardslide',
+	                cover: true
+	            },
+	            
+	            defaults: {
+	                scroll: 'vertical'
+	            },
+	            items: [traffic,visitors,goals,campaigns]
+	        });	
+			
+			
+			// set up listeners
 			traffic.on("activate", doTraffic);
 			visitors.on("activate", doVisitors);
 			goals.on("activate", doGoals);
 			campaigns.on("activate", doCampaigns);
 			
+			
+			doTraffic();
 		}
 		
 		
 		var checkReports = function(){
-			console.log("you selected account:"  + Mobilitix.selectedAccount);
-			if(Mobilitix.selectedAccount !== null && Mobilitix.reportsEnabled!==true){
+			if(Mobilitix.reportConfig.selectedAccount !== null && Mobilitix.reportConfig.reportsEnabled!==true){
 				enableReports();
 			}			
 		}
@@ -217,13 +246,13 @@ Ext.regModel('Account', {
 		var dataManager = function(){
 			var dataQuery = 'https://www.google.com/analytics/feeds/data' +
 			
-			    '?start-date=' + Mobilitix.startDate +
-			    '&end-date=' + Mobilitix.endDate +
-			    '&dimensions=ga:medium' +
-			    '&metrics=ga:visits' +
-			    '&sort=-ga:visits' +
-			    '&max-results=10' +
-			    '&ids=' + Mobilitix.selectedAccount;
+			    '?start-date=' + Mobilitix.reportConfig.startDate +
+			    '&end-date=' + Mobilitix.reportConfig.endDate +
+			    '&dimensions=' + Mobilitix.reportConfig.dimension +
+			    '&metrics=' + Mobilitix.reportConfig.metrics +
+			    '&sort=-' + Mobilitix.reportConfig.sort +
+			    '&max-results=' + Mobilitix.reportConfig.results +
+			    '&ids=' + Mobilitix.reportConfig.selectedAccount;
 			  
 			 analyticsService.getDataFeed(dataQuery, handleDataFeed, errorHandler);					
 		}
@@ -242,7 +271,7 @@ Ext.regModel('Account', {
 				data.addRow([entry.getValueOf('ga:medium'), entry.getValueOf('ga:visits')]); 
 			}
 			
-			var chart = new google.visualization.PieChart(document.getElementById('trafficDataHolder'));
+			var chart = new google.visualization.PieChart(document.getElementById(Mobilitix.reportConfig.chartTarget));
     		chart.draw(data, {width: 400, height: 240, is3D: true, title: 'Visitors by traffic source'});
 		      
 		     
@@ -260,6 +289,12 @@ Ext.regModel('Account', {
 		 
 		var doTraffic = function(){
 			
+			Mobilitix.reportConfig.metrics = "ga:visits";
+			Mobilitix.reportConfig.dimension = "ga:date";
+			Mobilitix.reportConfig.sort = "ga:date";
+			Mobilitix.reportConfig.results = "10";
+			Mobilitix.reportConfig.chartTarget = "trafficDataHolder"; 
+			
 			console.log("let's do some traffic reporting!")
 			dataManager();
 			
@@ -269,6 +304,12 @@ Ext.regModel('Account', {
 		
 		var doVisitors = function(){
 			console.log("let's do some visitors reporting!")
+			Mobilitix.reportConfig.metrics = "ga:visits";
+			Mobilitix.reportConfig.dimension = "ga:medium";
+			Mobilitix.reportConfig.sort = "ga:visits"; 
+			Mobilitix.reportConfig.results = "10";
+			Mobilitix.reportConfig.chartTarget = "visitorsDataHolder"; 
+			
 			dataManager();
 		}
 		
@@ -285,7 +326,8 @@ Ext.regModel('Account', {
 		
 		
 		var setAccount = function(caller, index, item, e){
-			Mobilitix.selectedAccount = caller.store.data.items[index].get('tableId');	
+			Mobilitix.reportConfig.selectedAccount = caller.store.data.items[index].get('tableId');
+			console.log(Mobilitix.reportConfig.selectedAccount);	
 			checkReports();
 		}
 		
