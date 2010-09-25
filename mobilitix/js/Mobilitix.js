@@ -30,7 +30,7 @@ Ext.regModel('Account', {
 		    model: 'Account',
 		    sorters: 'profileName',
 		    getGroupString : function(record) {
-		        return record.get('profileName')[0];
+		        return record.get('profileName');
 		    },
 		    data: []
 		});
@@ -106,24 +106,21 @@ Ext.regModel('Account', {
 		
 		//auth
 		var checkAuth = function() {
-			console.log("checkauth");
+			Ext.get("accountButton").remove();
 			
 			// auth
 			if(!auth)
 				google.accounts.user.login(scope);				
 			else
 				appInit();
-							
         };
 
 
 		// app Init
 		var appInit = function(){
-			Ext.get("accountButton").hide();
 			
+
 			showLoader();
-			
-	
 			analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
 		}
 		
@@ -137,9 +134,9 @@ Ext.regModel('Account', {
 			
 			for (var i = 0, entry; entry = entries[i]; ++i) {
 				Mobilitix.AccountStore.add(
-					{profileName:entry.getTitle().getText(), accountName:entry.getPropertyValue('ga:accountName'),tableId:entry.getTableId().getValue()}
+					{profileName:entry.getTitle().getText(), accountName:entry.getPropertyValue('ga:accountName').toUpperCase(),tableId:entry.getTableId().getValue()}
 				);
-				//console.log(entry.getPropertyValue('ga:accountName') + ' ' + entry.getTitle().getText() + ' ' + entry.getTableId().getValue());
+				console.log(entry.getPropertyValue('ga:accountName') + ' ' + entry.getTitle().getText() + ' ' + entry.getTableId().getValue());
 			}	
 			
 			accountList = new Ext.Panel({
@@ -158,14 +155,9 @@ Ext.regModel('Account', {
 			        width: Ext.is.Phone ? getDesiredW(0) : 300,
 			        height: getDesiredH(52),
 			        xtype: 'list',
-			        disclosure: {
-			            scope: Mobilitix.AccountStore,
-			            handler: function(record, btn, index) {
-			                Mobilitix.selectedAccount = record.get('tableId');	
-							checkReports();
-							
-			            }
-			        },
+					listeners: {
+				        itemtap: setAccount,
+				    },
 			        store: Mobilitix.AccountStore,
 			        tpl: '<tpl for="."><div class="accountList"><strong>{profileName}</strong></div></tpl>',
 			        itemSelector: 'div.accountList',
@@ -175,10 +167,10 @@ Ext.regModel('Account', {
 			    }]
 			});
 		
-			accountList.update();
-			
-			Ext.get('welcomeTab').hide();
+			accountList.update();		
+			Ext.get('welcomeTab').hide();	
 			hideLoader();
+
 			
 			home.add(accountList);
 			home.doLayout();
@@ -250,7 +242,7 @@ Ext.regModel('Account', {
 				data.addRow([entry.getValueOf('ga:medium'), entry.getValueOf('ga:visits')]); 
 			}
 			
-			var chart = new google.visualization.PieChart(document.getElementById('trafficTab'));
+			var chart = new google.visualization.PieChart(document.getElementById('trafficDataHolder'));
     		chart.draw(data, {width: 400, height: 240, is3D: true, title: 'Visitors by traffic source'});
 		      
 		     
@@ -289,6 +281,12 @@ Ext.regModel('Account', {
 		var doCampaigns = function(){
 			console.log("let's do some campaigns reporting!")
 			
+		}
+		
+		
+		var setAccount = function(caller, index, item, e){
+			Mobilitix.selectedAccount = caller.store.data.items[index].get('tableId');	
+			checkReports();
 		}
 		
 		
