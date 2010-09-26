@@ -17,7 +17,8 @@ var traffic = new Ext.Component({
 	id: 'trafficTab',
     scroll: 'vertical',
     html: ['<h1>Traffic Summary</h1>',
-		'<div id="trafficDataHolder"></div>']
+		'<div id="trafficChart"></div>',
+		'<div id="trafficTable"></div>']
 });
 		
 var visitors = new Ext.Component({
@@ -27,7 +28,9 @@ var visitors = new Ext.Component({
 	id: 'visitorsTab',
     scroll: 'vertical',
     html: ['<h1>Visitors Summary</h1>',
-		'<div id="visitorsDataHolder"></div>']
+		'<div id="visitorsChart"></div>',
+		'<div id="visitorsTable"></div>'
+		]
 });
 
 var goals = new Ext.Component({
@@ -37,7 +40,8 @@ var goals = new Ext.Component({
 	id: 'goalsTab',
     scroll: 'vertical',
     html: ['<h1>Goals Summary</h1>',
-		'<div id="goalsDataHolder"></div>']
+		'<div id="goalsChart"></div>',
+		'<div id="goalsTable"></div>',]
 });
 
 var campaigns = new Ext.Component({
@@ -47,7 +51,8 @@ var campaigns = new Ext.Component({
 	id: 'campaignsTab',
     scroll: 'vertical',
     html: ['<h1>Campaigns Summary</h1>',
-		'<div id="campaignsDataHolder"></div>']
+		'<div id="campaignsChart"></div>',
+		'<div id="campaignsTable"></div>']
 });
 
 var seo = new Ext.Component({
@@ -57,7 +62,8 @@ var seo = new Ext.Component({
 	id: 'seoTab',
     scroll: 'vertical',
     html: ['<h1>SEO Summary</h1>',
-		'<div id="seoDataHolder"></div>']
+		'<div id="seoChart"></div>',
+		'<div id="seoTable"></div>']
 });
 
 
