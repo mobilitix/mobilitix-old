@@ -25,15 +25,7 @@ Ext.regModel('Account', {
 		Mobilitix.startDate = '2010-09-01';
 		Mobilitix.endDate = '2010-09-08';
 		
-		Mobilitix.reportConfig = {
-				metrics: 'ga:visits',
-				dimension:'ga:date',
-				sort: 'ga:date',
-				results: '10',
-				chartTarget: 'trafficChart',
-				tableTarget: 'trafficTable',
-				reportType: 'TIMELINE'
-			};
+		Mobilitix.reportConfig = trafficReport;
 
 		
 		Mobilitix.AccountStore = new Ext.data.Store({
@@ -91,24 +83,31 @@ Ext.regModel('Account', {
 			},
 			bootstrap: function(){
 				console.log("bootsrapping");
+				init.baseLayout();
 								
-				if(auth){
-					init.baseLayout();
-					
+				if(auth){					
 					// FIXME:LOGOUT TEXT 
 					Ext.get("accountButton").text = "Logout";
 					init.appInit();
 				}
 				else{
-					init.baseLayout();
+				
 					init.welcomeLayout();
 				}	
 
-				//Ext.EventManager.on("accountButton", 'click', checkAuth);
+				Ext.EventManager.on("accountButton", 'click', checkAuth);
 			},
 			appInit: function(){
 				showLoader();	
 				analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
+				
+			},
+			logout: function(){
+				
+				home.remove([welcome,traffic,visitors,goals,campaigns]);
+				home.add(logout);
+				
+				home.doLayout();
 				
 			}
 			
@@ -120,7 +119,7 @@ Ext.regModel('Account', {
 		
 		var getDesiredW = function(offset) {
 		    var viewW = Ext.Element.getViewportWidth(),
-		        desiredW = Math.min(viewW-offset, 400);
+		        desiredW = Math.min(viewW-offset, 768);
 		
 		    return desiredW;
 		};
@@ -128,8 +127,7 @@ Ext.regModel('Account', {
 		
 		var getDesiredH = function(offset){
 			var viewH = Ext.Element.getViewportHeight(),
-		        desiredH = Math.min(viewH-offset, 400);
-			console.log(Ext.Element.getViewportHeight() + ' - ' + desiredH);
+		        desiredH = Math.min(viewH-offset, 768);
 		    return desiredH;
 			
 		}
@@ -274,31 +272,35 @@ Ext.regModel('Account', {
 		var reportRenderer = function(result){
 			
 			console.log("rendering");
-			var entries = result.feed.getEntries();
+			var entries = result.feed.getEntries().reverse();
 			var data = new google.visualization.DataTable();
 			
-			data.addColumn('string', 'Traffic Source');
-		    data.addColumn('number', 'Visitors');
+			data.addColumn('string', Mobilitix.reportConfig.dimensionTitle);
+		    data.addColumn('number', Mobilitix.reportConfig.metricsTitle);
+			
+			data.addRows(entries.length);
 			
 			for (var i = 0, entry; entry = entries[i]; ++i) {
-				data.addRow([entry.getValueOf('ga:medium'), entry.getValueOf('ga:visits')]); 
+				//data.addRow([entry.getValueOf(Mobilitix.reportConfig.dimension), entry.getValueOf(Mobilitix.reportConfig.metrics)]);
+				data.setCell(i, 0, entry.getValueOf(Mobilitix.reportConfig.dimension));
+				data.setCell(i, 1, entry.getValueOf(Mobilitix.reportConfig.metrics)); 
 			}
 			
 			
 			switch(Mobilitix.reportConfig.reportType){
 				case "PIE":
 					var pieChart = new google.visualization.PieChart(document.getElementById(Mobilitix.reportConfig.chartTarget));
-    				pieChart.draw(data, {width: 400, height: 240, is3D: true, title: 'Visitors by traffic source'});
+    				pieChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120), is3D: true, title: Mobilitix.reportConfig.title});
 					return;
 				case "TIMELINE":
 					var lineChart = new google.visualization.LineChart(document.getElementById(Mobilitix.reportConfig.chartTarget));
-    				lineChart.draw(data, {width: 400, height: 240, is3D: true, title: 'Visitors by traffic source'});
+    				lineChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120), is3D: true, title: Mobilitix.reportConfig.title});
 					return;	
 			}
 			
 		     
-			//var table = new google.visualization.Table(document.getElementById(Mobilitix.reportConfig.tableTarget));  
-		    //table.draw(data, {showRowNumber: true}); 
+			var table = new google.visualization.Table(document.getElementById(Mobilitix.reportConfig.tableTarget));  
+		    table.draw(data, {showRowNumber: true}); 
 			
 		}
 		
@@ -311,68 +313,30 @@ Ext.regModel('Account', {
 		
 		/* reporting */
 		 
-		var doTraffic = function(){
-			
-			Mobilitix.reportConfig = {
-				metrics: 'ga:visits',
-				dimension:'ga:date',
-				sort: 'ga:date',
-				results: '10',
-				chartTarget: 'trafficChart',
-				tableTarget: 'trafficTable',
-				reportType: 'TIMELINE'
-			};
-			
-			/*Mobilitix.reportConfig.dimension = "ga:date";
-			Mobilitix.reportConfig.sort = "ga:date";
-			Mobilitix.reportConfig.results = "10";
-			Mobilitix.reportConfig.chartTarget = "trafficChart"; 
-			Mobilitix.reportConfig.tableTarget = "trafficTable";
-			Mobilitix.reportConfig.reportType = "PIE";
-			*/
+		var doTraffic = function(){			
+			Mobilitix.reportConfig = trafficReport;
 			console.log("let's do some traffic reporting!")
-			dataManager();
-			
-			
+			dataManager();	
 		}
 		
 		
 		var doVisitors = function(){
-			console.log("let's do some visitors reporting!")
-			
-			Mobilitix.reportConfig = {
-				metrics: 'ga:visits',
-				dimension:'ga:medium',
-				sort: 'ga:visits',
-				results: '10',
-				chartTarget: 'visitorsChart',
-				tableTarget: 'visitorsTable',
-				reportType: 'PIE'
-				
-			}
-				
-				
-			/*
-			Mobilitix.reportConfig.metrics = "ga:visits";
-			Mobilitix.reportConfig.dimension = "ga:medium";
-			Mobilitix.reportConfig.sort = "ga:visits"; 
-			Mobilitix.reportConfig.results = "10";
-			Mobilitix.reportConfig.chartTarget = "visitorsChart";
-			Mobilitix.reportConfig.tableTarget = "visitorsTable"; 
-			Mobilitix.reportConfig.reportType = "TIMELINE";
-			*/
-			
+			console.log("let's do some visitors reporting!")		
+			Mobilitix.reportConfig = visitorsReport;
 			dataManager();
 		}
 		
 		
 		var doGoals = function(){
 			console.log("let's do some goals reporting!")
+			Mobilitix.reportConfig = goalsReport;
 			dataManager();
 		}
 		
 		var doCampaigns = function(){
+			Mobilitix.reportConfig = campaignsReport;
 			console.log("let's do some campaigns reporting!")
+			dataMaanger();
 			
 		}
 		
@@ -401,12 +365,18 @@ Ext.regModel('Account', {
 		
 		//auth
 		var checkAuth = function() {
-
+			console.log("checkAuth");
+		
 			// auth
-			if(!auth)
-				google.accounts.user.login(scope);				
-			else
-				google.accounts.user.logout();	
+			if(!auth){
+				google.accounts.user.login(scope);
+			}								
+			else{
+				init.logout();
+				google.accounts.user.logout();
+				
+			}
+					
 				
         };
 
