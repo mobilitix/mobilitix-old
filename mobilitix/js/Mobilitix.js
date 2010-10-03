@@ -21,9 +21,11 @@ Ext.regModel('Account', {
 		 
 		var auth = google.accounts.user.checkLogin(scope);
 		
-
-		Mobilitix.startDate = '2010-09-01';
-		Mobilitix.endDate = '2010-09-08';
+		endDate = new Date();
+		startDate = new Date().add(Date.DAY, -7);;
+		
+		Mobilitix.startDate = startDate.format('Y-m-d');
+		Mobilitix.endDate = endDate.format('Y-m-d');
 		
 		Mobilitix.reportConfig = trafficReport;
 
@@ -34,6 +36,9 @@ Ext.regModel('Account', {
 		    getGroupString : function(record) {
 		        return record.get('profileName');
 		    },
+			proxy:new Ext.data.LocalStorageProxy({
+		        id: 'account-list-store'
+		    }),
 		    data: []
 		});
 		
@@ -98,8 +103,13 @@ Ext.regModel('Account', {
 				Ext.EventManager.on("accountButton", 'click', checkAuth);
 			},
 			appInit: function(){
-				showLoader();	
-				analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
+				showLoader();
+				if (!Mobilitix.AccountStore.cache) {				
+					analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
+				}else{
+					cachedAccountHandler()
+				}
+									
 				
 			},
 			logout: function(){
@@ -142,6 +152,12 @@ Ext.regModel('Account', {
 
 		/* helpers */
 
+		var cachedAccountHandler = function(){
+			console.log("no need to ask the network!!")
+			
+			
+		}
+
 		
 		// analytics api data handlers
 		var accountFeedHandler = function(result){
@@ -150,12 +166,23 @@ Ext.regModel('Account', {
 			var entries = result.feed.getEntries();
 			console.log("accountHandler");
 			
-			for (var i = 0, entry; entry = entries[i]; ++i) {
+			
+		
+			
+			
+			
+				
+				
+			for (var i = 0, entry; entry = entries[i]; ++i) {				
 				Mobilitix.AccountStore.add(
 					{profileName:entry.getTitle().getText(), accountName:entry.getPropertyValue('ga:accountName').toUpperCase(),tableId:entry.getTableId().getValue()}
 				);
 				console.log(entry.getPropertyValue('ga:accountName') + ' ' + entry.getTitle().getText() + ' ' + entry.getTableId().getValue());
 			}	
+				
+			
+			
+				
 			
 			accountList = new Ext.Panel({
 				title:'Account List',
@@ -184,6 +211,8 @@ Ext.regModel('Account', {
 			        indexBar: true
 			    }]
 			});
+			
+			Mobilitix.AccountStore.sync();
 		
 			accountList.update();		
 			//Ext.get('welcomeTab').hide();	
