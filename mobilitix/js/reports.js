@@ -29,6 +29,17 @@ var visitorsReport = {
 	
 };
 
-var goalsReport = {};
+var goalsReport = {
+	metrics: 'ga:goalCompletionsAll',
+	dimension:'ga:date',
+	sort: 'ga:date',
+	results: '10',
+	chartTarget: 'goalsChart',
+	tableTarget: 'goalsTable',
+	reportType: 'TIMELINE',
+	title: 'Goals Trend',
+	dimensionTitle: 'Date',
+	metricsTitle:'Goals'
+};
 
 var campaignsReport ={}					

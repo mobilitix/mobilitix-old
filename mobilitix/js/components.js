@@ -6,7 +6,6 @@ var welcome = new Ext.Component({
     scroll: 'vertical',
     html: ['<h1 id="title">Mobile Web Analytics</h1>',
 			'<img src="/img/bee.png" alt="Mobile Web Analytics"/><br/>',
-		   '<img src="/img/dummy.gif" style="display:none" alt="required for Google Data"/>',
 		   '<p>Tap to <strong>login with your Google Analytics</strong> account. You will login on Google Servers: we will never store nor see your password.</p>']				
 });
 
@@ -37,8 +36,7 @@ var visitors = new Ext.Component({
 	id: 'visitorsTab',
     scroll: 'vertical',
     html: ['<div id="visitorsChart"></div>',
-		'<div id="visitorsTable"></div>'
-		]
+		'<div id="visitorsTable"></div>']
 });
 
 var goals = new Ext.Component({
@@ -72,15 +70,3 @@ var seo = new Ext.Component({
 });
 
 
-var appLoader = new Ext.Panel({
-            floating: true,
-            modal: true,
-            centered: true,
-            width: 300,
-			height:70,
-            styleHtmlContent: true,
-			hideOnMaskTap: false,
-            html: '<div><img src="/img/ajax-loader.gif" alt="loading" style="float:left;padding:0 10px"/> Loading your data</div>',
-            
-          
- });
