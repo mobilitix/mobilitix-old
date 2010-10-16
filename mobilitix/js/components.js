@@ -10,12 +10,13 @@ var welcome = new Ext.Component({
 });
 
 var logout = new Ext.Component({
-	title: 'Mobilitix',
+	title: 'Logout',
     cls: 'welcomeCnt',
 	id: 'logoutTab',
     scroll: 'vertical',
     html: ['<h1 id="title">Mobile Web Analytics</h1>',
-			'Adieu!']				
+			'Sure you want to Logout?',
+			'<button id="logoutButton">Logout</button>']				
 });
 
 		 
@@ -55,8 +56,7 @@ var campaigns = new Ext.Component({
 	iconCls: 'campaigns',
 	id: 'campaignsTab',
     scroll: 'vertical',
-    html: ['<div id="campaignsChart"></div>',
-		'<div id="campaignsTable"></div>']
+    html: ['<div id="campaignsTable"></div>']
 });
 
 var seo = new Ext.Component({
@@ -68,5 +68,37 @@ var seo = new Ext.Component({
     html: ['<div id="seoChart"></div>',
 		'<div id="seoTable"></div>']
 });
+
+
+var startDatePicker = {
+    xtype: 'datepickerfield',
+    name: 'startDateP',
+    label: 'Start Date',
+    datePickerConfig: { yearFrom: 1900 }
+}
+
+
+var settingsButton = {
+	xtype: 'button',
+	text: 'Date',
+	id: 'settingsButton'
+	/*,
+	hidden:true*/
+}	
+
+
+var loginButton = {
+	xtype: 'button',
+	text: 'Login',
+	id: 'accountButton'
+}
+
+
+var headerButtonsR = [
+	loginButton,
+	{xtype: 'spacer'},
+	settingsButton
+];	
+		
 
 

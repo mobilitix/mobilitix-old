@@ -54,29 +54,22 @@ Ext.regModel('Account', {
 		    }),
 		    data: []
 		});
-		
-		
-		var loginButton = {
-				xtype: 'button',
-				text: 'Login',
-				ui: 'round',
-				id: 'accountButton',
-				handler: checkAuth
-			}
+			
 		
 		var dockedItems = [{
 			dock: 'top',
 			xtype: 'toolbar',
 			title: 'Mobilitix',
 			pack: 'justify', 
-			items: [loginButton]
+			items:  headerButtonsR
 		}];
+		
 
 		var home = new Ext.Panel({
-	            title: 'Settings',
-	            cls: 'settingsCnt',
-				iconCls: 'settings',
-				id: 'settingsTab',
+	            title: 'Home',
+	            cls: 'homeCnt',
+				iconCls: 'home',
+				id: 'homeTab',
 	            scroll: 'vertical',
 				align: 'center',
 				fullscreen:true,
@@ -88,6 +81,7 @@ Ext.regModel('Account', {
 				dockedItems: dockedItems,
 				items:[]	 
 			});	
+		
 		
 		// application manager
 		var init = {
@@ -102,39 +96,36 @@ Ext.regModel('Account', {
 			},
 			bootstrap: function(){
 				init.baseLayout();
-				
-				console.log(auth);
-								
+
 				if(auth)		
 					init.appInit();
 				else				
 					init.welcomeLayout();
 
-				home.doLayout();	
+				home.doLayout();
+					
 				Ext.EventManager.on("accountButton", 'click', checkAuth);
+				Ext.EventManager.on("settingsButton", 'click', manageSettings);	
 			},
 			appInit: function(){
 				Ext.get("accountButton").update("Logout");
-				
-				
 				
 				Mobilitix.AccountStore.read({
 						scope: this,
 			            callback: function(records, operation, successful) {
 			                if (records.length == 0) {
-								console.log("fresh download");
-								
-								showLoader();
+								init.showLoader();
 								analyticsService.getAccountFeed(accountFeedUri, accountFeedHandler, errorHandler);
 							}
 							else {
-								console.log("cached accounts");
 								init.showAccounts()
 							}
 			                    
 			            }
 			        }
-				);				
+				);
+				
+							
 				
 			},
 			showAccounts: function(){
@@ -169,39 +160,75 @@ Ext.regModel('Account', {
 				
 			
 				accountList.update();		
-				hideLoader();
+				init.hideLoader();
 	
 				
+				home.show(settingsButton);
+								
 				home.add(accountList);
 				home.doLayout();
-			},			
+			
+			},	
+			enableReports: function(){
+				home.remove(accountList);
+				
+				
+				var tabpanel = new Ext.TabPanel({
+					id: 'tabPanel',
+		            tabBar: {
+		                dock: 'bottom',
+		                layout: {
+		                    pack: 'center'
+		                }
+		            },
+		            fullscreen: true,
+		            ui: 'light',
+		            animation: {
+		                type: 'cardslide',
+		                cover: true
+		            },
+		            
+		            defaults: {
+		                scroll: 'vertical'
+		            },
+		            items: [traffic,visitors,goals,campaigns,logout]
+		        });	
+				
+				
+				// set up listeners
+				traffic.on("activate", doTraffic);
+				visitors.on("activate", doVisitors);
+				goals.on("activate", doGoals);
+				campaigns.on("activate", doCampaigns);
+				
+				Ext.EventManager.on("logoutButton", 'click', init.logout);	
+				
+				doTraffic();
+			},		
+			hideLoader: function(){
+				appLoader.hide();		
+			},
+			showLoader:function(){
+				if (!appLoader) {
+				appLoader = new appLoader();
+                
+	            }
+				
+	            appLoader.show('pop');	
+			},
 			logout: function(){
 				console.log("logging out")
-				
-				
-				//Mobilitix.AccountStore.destroyStore();
-				
-				
-				try{
-					Ext.get('tabPanel').destroy();
-				}
-				catch(e){
-					console.log("unable to destroy "+e)
-				}
-					
-				home.add(logout);
-				home.doLayout();
-				
+						
+							
 				google.accounts.user.logout();
 				
+				document.location.href='/';
 				
 			}
 			
 			
 		}
-		
-		
-		
+			
 		
 		var getDesiredW = function(offset) {
 		    var viewW = Ext.Element.getViewportWidth(),
@@ -218,13 +245,6 @@ Ext.regModel('Account', {
 			
 		}
 	
-
-		
-			
-
-        
-
-
 
 		/* helpers */
 		
@@ -245,69 +265,10 @@ Ext.regModel('Account', {
 			
 			init.showAccounts();
 		}
-		
-		
-		var enableReports = function(){
-			home.remove(accountList);
-			
-			
-			var tabpanel = new Ext.TabPanel({
-				id: 'tabPanel',
-	            tabBar: {
-	                dock: 'bottom',
-	                layout: {
-	                    pack: 'center'
-	                }
-	            },
-	            fullscreen: true,
-	            ui: 'light',
-	            animation: {
-	                type: 'cardslide',
-	                cover: true
-	            },
-	            
-	            defaults: {
-	                scroll: 'vertical'
-	            },
-	            items: [traffic,visitors,goals,campaigns]
-	        });	
-			
-			
-			// set up listeners
-			traffic.on("activate", doTraffic);
-			visitors.on("activate", doVisitors);
-			goals.on("activate", doGoals);
-			campaigns.on("activate", doCampaigns);
-			
-			
-			doTraffic();
-		}
-		
-		
-		var checkReports = function(){
-			if(Mobilitix.reportConfig.selectedAccount !== null && Mobilitix.reportConfig.reportsEnabled!==true){
-				enableReports();
-			}			
-		}
-		
-		
-		var hideLoader = function(){					
-			appLoader.hide();					
-		}
-		
-		var showLoader = function(){    
-            if (!appLoader) {
-				appLoader = new appLoader();
-                
-            }
-			
-            appLoader.show('pop');			
-		}
-		
-		
+					
 		// query handler
 		var dataManager = function(){
-			console.log(Mobilitix.reportConfig.startDate);
+			console.log("datamanager");
 			var dataQuery = 'https://www.google.com/analytics/feeds/data' +
 			
 			    '?start-date=' + Mobilitix.startDate +
@@ -334,33 +295,30 @@ Ext.regModel('Account', {
 			data.addRows(entries.length);
 			
 			for (var i = 0, entry; entry = entries[i]; ++i) {
-				//data.addRow([entry.getValueOf(Mobilitix.reportConfig.dimension), entry.getValueOf(Mobilitix.reportConfig.metrics)]);
 				data.setCell(i, 0, entry.getValueOf(Mobilitix.reportConfig.dimension));
 				data.setCell(i, 1, entry.getValueOf(Mobilitix.reportConfig.metrics)); 
 			}
 			
+			var table = new google.visualization.Table(document.getElementById(Mobilitix.reportConfig.tableTarget));  
+		    table.draw(data, {showRowNumber: false, width:300, height: getDesiredH(120)*.4}); 
 			
 			switch(Mobilitix.reportConfig.reportType){
 				case "PIE":
 					var pieChart = new google.visualization.PieChart(document.getElementById(Mobilitix.reportConfig.chartTarget));
-    				pieChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120), is3D: true, title: Mobilitix.reportConfig.title + ' ' + Mobilitix.accountName});
+    				pieChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120)*.6, is3D: true, title: Mobilitix.reportConfig.title + ' ' + Mobilitix.accountName});
 					return;
 				case "TIMELINE":
 					var lineChart = new google.visualization.LineChart(document.getElementById(Mobilitix.reportConfig.chartTarget));
-    				lineChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120), is3D: true, title: Mobilitix.reportConfig.title + ' ' + Mobilitix.accountName});
+    				lineChart.draw(data, {width: getDesiredW(0), height: getDesiredH(120)*.6, is3D: true, legend: 'none', title: Mobilitix.reportConfig.title + ' ' + Mobilitix.accountName});
 					return;	
 			}
 			
-		     
-			var table = new google.visualization.Table(document.getElementById(Mobilitix.reportConfig.tableTarget));  
-		    table.draw(data, {showRowNumber: true}); 
+		    
+			
 			
 		}
 		
-		var dataFeedHandler = function(result){
-			console.log("get the data!" + result)
-			
-		}
+	
 		
 		
 		
@@ -379,12 +337,13 @@ Ext.regModel('Account', {
 			dataManager();
 		}
 		
-		
+				
 		var doGoals = function(){
 			console.log("let's do some goals reporting!")
 			Mobilitix.reportConfig = goalsReport;
 			dataManager();
 		}
+
 		
 		var doCampaigns = function(){
 			Mobilitix.reportConfig = campaignsReport;
@@ -398,20 +357,15 @@ Ext.regModel('Account', {
 			Mobilitix.selectedAccount = caller.store.data.items[index].get('tableId');
 			Mobilitix.accountName = caller.store.data.items[index].get('profileName');
 			
-			checkReports();
+			init.enableReports();
 		}
-		
-		
 				
-		// feed logic
-		
-		
+				
+		// feed logic			
 		var errorHandler = function(){
 			console.log("there was an error");
 			
 		}
-		
-		
 	
 		
 		//auth
@@ -423,14 +377,76 @@ Ext.regModel('Account', {
 				google.accounts.user.login(scope);								
 			else
 				init.logout();
-	
-				
+			
         };
 
 		
-		init.bootstrap();
 		
-	
+		// TODO
+		var setReportingDate = function(dateString){
+			console.log(dateString)
+
+			switch (dateString){
+				
+				case "today":
+					Mobilitix.startDate = Mobilitix.endDate = new Date().format('Y-m-d');
+					dataManager();
+					return;
+					
+				case "yesterday":
+					Mobilitix.startDate = endDate;
+					Mobilitix.endDate = endDate;
+					dataManager();
+					return;
+					
+				case "lastweek":
+					Mobilitix.startDate = new Date().add(Date.DAY, -7).format('Y-m-d');
+					Mobilitix.endDate = new Date().add(Date.DAY, -1).format('Y-m-d');
+					dataManager();
+					return;	
+						
+				
+			}
+			
+			
+			
+		}
+
+
+		// settings	
+		var manageSettings = function(){
+			if (!this.actions) {
+                this.actions = new Ext.ActionSheet({
+                    items: [{
+                        text: 'Today',
+						scope:this,
+                        handler : function(){
+							this.actions.hide();
+							setReportingDate("today");
+							
+						}
+                    },{
+                        text : 'Yesterday',
+						scope:this,
+                        handler : function(){
+							setReportingDate("today");
+							this.actions.hide();
+						}
+                    },{
+                        text : 'Last Week',         
+                        scope : this,
+                        handler : function(){
+							setReportingDate("today");
+                            this.actions.hide();
+                        }
+                    }]
+                });
+            }
+            this.actions.show();
+		};
+		
+		
+		init.bootstrap();
 		
 		
     }

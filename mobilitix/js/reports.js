@@ -42,4 +42,14 @@ var goalsReport = {
 	metricsTitle:'Goals'
 };
 
-var campaignsReport ={}					
+var campaignsReport ={
+	metrics: 'ga:pageviews',
+	dimension:'ga:pagePath',
+	sort: 'ga:pageviews',
+	results: '10',
+	tableTarget: 'campaignsTable',
+	reportType: 'TABLE',
+	title: 'Content Overview',
+	dimensionTitle: 'Content',
+	metricsTitle:'Pageviews'
+}					

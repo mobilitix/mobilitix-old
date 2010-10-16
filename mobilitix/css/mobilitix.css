@@ -21,7 +21,7 @@ h1 {
 span.x-button-label{text-decoration:none;margin-top:5px;}
 
 
-#settingsTab, #trafficTab, #campaignsTab, #goalsTab, #visitorsTab {
+#homeTab, #trafficTab, #campaignsTab, #goalsTab, #visitorsTab, #logoutTab {
 
 	       text-align: center;
 
@@ -31,6 +31,15 @@ span.x-button-label{text-decoration:none;margin-top:5px;}
 		   
 }
 
-#settingsTab h1, #trafficTab #trafficChart, #campaignsTab #campaignChart, #goalsTab #goalsChart, #visitorsTab #visitorsChart {
+#homeTab h1, #logoutTab h1, #trafficTab #trafficChart, #campaignsTab #campaignsTable, #goalsTab #goalsChart, #visitorsTab #visitorsChart {
 	padding-top:44px;
+	overflow:scroll;
+	
+}
+
+.x-fullscreen{background:#fff;}
+
+#trafficTab #trafficTable, #campaignsTab #campaignsTable, #goalsTab #goalsTable, #visitorsTab #visitorsTable{
+	width:300px;
+	margin:5px auto;
 }
